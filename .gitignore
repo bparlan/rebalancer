@@ -1,0 +1,24 @@
+   # Node / JS artefacts
+   node_modules/
+   dist/
+   build/
+   out/
+
+   # Env files – never commit real secrets
+   .env
+   .env.local
+   *.env*
+   *.env.local
+
+   # OS / editor junk
+   .DS_Store
+   *.swp
+   .idea/
+   .vscode/
+
+   # Test coverage / logs
+   coverage/
+   *.log
+   npm-debug.log*
+   yarn-debug.log*
+   yarn-error.log*
