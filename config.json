@@ -1,0 +1,34 @@
+{
+  "chainId": 8453,
+  "minEthGasReserveWei": "2000000000000000",
+  "maxSlippageBps": 50,
+  "hysteresisBps": 500,
+  "tradingEnabled": false,
+  "maxSwapUsd": "50",
+  "tokens": {
+    "ETH": {
+      "symbol": "ETH",
+      "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "decimals": 18,
+      "targetAllocationBps": 7300
+    },
+    "USDC": {
+      "symbol": "USDC",
+      "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bda02913",
+      "decimals": 6,
+      "targetAllocationBps": 1000
+    },
+    "MORPHO": {
+      "symbol": "MORPHO",
+      "address": "0xbaa5cc21fd487b8fcc2f632f3f4e8d37262a0842",
+      "decimals": 18,
+      "targetAllocationBps": 500
+    },
+    "UNI": {
+      "symbol": "UNI",
+      "address": "0x327f2C6276856514614136e9ff090Ea00A12E20B",
+      "decimals": 18,
+      "targetAllocationBps": 1200
+    }
+  }
+}
