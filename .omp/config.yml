@@ -1,0 +1,7 @@
+project_id: "rebalancer"
+project_slug: "rebalancer"
+mode: "application"
+artifacts:
+  storage_path: "./docs/"
+  milestones_path: "./milestones/"
+  config_path: "./.omp/"

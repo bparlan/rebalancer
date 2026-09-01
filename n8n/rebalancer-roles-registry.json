@@ -1,0 +1,94 @@
+{
+  "_meta": {
+    "purpose": "Data-layer registry for the Zodiac Roles Modifier scoping milestone (rebalancer-bot). Single source of truth for addresses and parameters used in generated calldata — no value here should be hand-duplicated elsewhere without pointing back to this file.",
+    "rule": "Any field with verified=false or a value of '#NEEDS-CLARIFICATION' BLOCKS use of that field in generated calldata. generate-verification should enforce this mechanically, not rely on the agent remembering to check.",
+    "lastReviewedByHuman": "2026-08-25"
+  },
+
+  "chain": { "name": "base", "chainId": 8453 },
+
+  "safe": {
+    "address": "0x96c841D77782E3ED12DDEbBA5246E286fAbE4B97",
+    "threshold": "1-of-1",
+    "confirmedRoles": ["avatar", "owner", "target"],
+    "verified": true,
+    "sources": ["Basescan Read Contract, manually checked by Baris 2026-08-25"]
+  },
+
+  "rolesModifier": {
+    "address": "0x3a0F3035b9CcFc4Efd25C11C34721985172417f4",
+    "version": "v2",
+    "verified": true,
+    "sources": ["deployModule tx confirmed on-chain; Basescan Read Contract checked by Baris 2026-08-25"]
+  },
+
+  "transactionUnwrapper": {
+    "adapter": "0xB4Cd4bb764C089f20DA18700CE8bc5e49F369efD",
+    "targets": {
+      "multiSend": "0x38869bf66a61cF6bDB996A6aE40D5853Fd43B526",
+      "multiSendCallOnly": "0x9641d764fc13c8B624c04430C7356C1C7C8102e2"
+    },
+    "verified": true,
+    "sources": ["Matches docs.roles.gnosisguild.org/general/unwrapping example verbatim; cross-checked 2026-08-25"]
+  },
+
+  "role": {
+    "key": "REBALANCER",
+    "member": "#NEEDS-CLARIFICATION — generate a fresh, single-purpose EOA for this bot (not the Safe owner key, not your main wallet). Put its address here. This file must not be used to build calldata until this is filled AND verified by Baris.",
+    "verified": false
+  },
+
+  "tokens": [
+    {
+      "symbol": "BTC-wrapper",
+      "address": "#NEEDS-CLARIFICATION",
+      "decimals": null,
+      "verified": false,
+      "note": "Confirm WBTC vs cbBTC on Base first — these are different contracts. Check which one you actually hold before resolving the address."
+    },
+    { "symbol": "WETH", "address": "#NEEDS-CLARIFICATION", "decimals": 18, "verified": false },
+    { "symbol": "LINK", "address": "#NEEDS-CLARIFICATION", "decimals": 18, "verified": false },
+    { "symbol": "UNI",  "address": "#NEEDS-CLARIFICATION", "decimals": 18, "verified": false },
+    {
+      "symbol": "MORPHO",
+      "address": "#NEEDS-CLARIFICATION",
+      "decimals": 18,
+      "verified": false,
+      "lead": "0xBAa5CC21fd487B8Fcc2F632f3F4E8D37262a0842 per a single Coinbase Assets social post (2025-02-07) — ONE unverified source. Treat as a lead, not a value. Confirm independently (Basescan + Morpho's own official docs/deployments listing) before setting verified:true."
+    }
+  ],
+
+  "executionVenue": {
+    "type": "#NEEDS-CLARIFICATION — confirm final choice: CoW Protocol (recommended, MEV-protected via batch auctions) vs. a DEX aggregator router (1inch/Odos/0x)",
+    "vaultRelayerOrRouter": "#NEEDS-CLARIFICATION",
+    "settlementOrTarget": "#NEEDS-CLARIFICATION",
+    "verified": false
+  },
+
+  "permissions": {
+    "perToken_approve": {
+      "function": "approve(address,uint256)",
+      "conditions": [
+        { "param": "spender", "op": "equals", "value": "ref:executionVenue.vaultRelayerOrRouter" },
+        { "param": "amount", "op": "lessThanOrEqual", "value": "ref:allowance.perTxCap" }
+      ]
+    },
+    "swapOrPresign": {
+      "function": "#NEEDS-CLARIFICATION — depends on executionVenue.type (e.g. setPreSignature(bytes,bool) for CoW Protocol)",
+      "conditions": [
+        { "param": "recipient_or_receiver", "op": "equals", "value": "ref:safe.address" }
+      ]
+    }
+  },
+
+  "allowance": {
+    "period": "1 day",
+    "perTxCap": "#NEEDS-CLARIFICATION — pick an amount you are fully comfortable losing entirely if something fails. This is the backstop, size it accordingly.",
+    "verified": false
+  },
+
+  "executionModel": {
+    "setup": "Every transaction produced from this registry is signed manually by Baris via the Safe UI, one at a time, after reading the generated human-readable diff. No skill in this milestone submits or broadcasts a transaction.",
+    "runtime": "Later, the bot EOA (role.member) calls execTransactionWithRole from n8n, unattended. That is explicitly out of scope for this milestone and depends entirely on this milestone's scoping being correct and verified first."
+  }
+}

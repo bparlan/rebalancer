@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zodiac Role Status Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            color: #00ff00;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 0 0 20px #00ff00;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 0 0 20px #00ff00; }
+            to { text-shadow: 0 0 30px #00ff00, 0 0 40px #00ff00; }
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .status-card {
+            background: rgba(0, 20, 0, 0.8);
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .status-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 255, 0, 0.3);
+        }
+        
+        .status-card h2 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 1px solid #00ff00;
+            padding-bottom: 10px;
+        }
+        
+        .status-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .status-active { color: #00ff00; }
+        .status-warning { color: #ffaa00; }
+        .status-danger { color: #ff0000; }
+        .status-unknown { color: #888888; }
+        
+        .execution-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .execution-table th,
+        .execution-table td {
+            border: 1px solid #00ff00;
+            padding: 12px;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .execution-table th {
+            background: rgba(0, 255, 0, 0.1);
+            font-weight: bold;
+        }
+        
+        .execution-table tr:nth-child(even) {
+            background: rgba(0, 255, 0, 0.05);
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .status-indicator.active { background: #00ff00; }
+        .status-indicator.warning { background: #ffaa00; }
+        .status-indicator.danger { background: #ff0000; }
+        .status-indicator.unknown { background: #888888; }
+        
+        .refresh-button {
+            background: rgba(0, 255, 0, 0.2);
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            padding: 12px 24px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px auto;
+            display: block;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .refresh-button:hover {
+            background: #00ff00;
+            color: #000;
+            box-shadow: 0 0 20px #00ff00;
+        }
+        
+        .last-update {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #888888;
+        }
+        
+        .health-indicator {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 8px;
+            border-radius: 5px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .websocket-status {
+            text-align: center;
+            margin: 20px 0;
+            padding: 10px;
+            border: 2px dashed #00ff00;
+            border-radius: 5px;
+            background: rgba(0, 255, 0, 0.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Zodiac Role Status Dashboard</h1>
+        
+        <div class="websocket-status">
+            <div class="status-indicator active"></div>
+            <span>WebSocket Connected | Auto-refresh Every 30 Seconds</span>
+        </div>
+        
+        <div class="status-grid">
+            <div class="status-card">
+                <h2>Role Safe Status</h2>
+                <div id="safe-address" class="status-value status-unknown">Loading...</div>
+                <div class="health-indicator">
+                    <div class="status-indicator active"></div>
+                    <span>Chain: <span id="chain-name">Loading...</span></div>
+                </div>
+                <div class="health-indicator">
+                    <div class="status-indicator active"></div>
+                    <span>Threshold: <strong>1-of-1</strong> (Role-Owned Safe)</span>
+                </div>
+                <div class="health-indicator">
+                    <div class="status-indicator active"></div>
+                    <span>Balance: <span id="safe-balance">Loading...</span></span>
+                </div>
+            </div>
+            
+            <div class="status-card">
+                <h2>Token Permissions</h2>
+                <div id="permission-count" class="status-value status-active">0</div>
+                <div>Verified tokens in role whitelist</div>
+                <div id="token-list">Loading...</div>
+            </div>
+            
+            <div class="status-card">
+                <h2>System Health</h2>
+                <div class="health-indicator">
+                    <div class="status-indicator active"></div>
+                    <span>Registry: <span id="registry-status">Checking...</span></span>
+                </div>
+                <div class="health-indicator">
+                    <div class="status-indicator active"></div>
+                    <span>Recent Executions: <span id="execution-count">0</span></span>
+                </div>
+                <div class="health-indicator">
+                    <div class="status-indicator" id="health-indicator"></div>
+                    <span>Overall Status: <strong id="overall-status">Loading...</strong></span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-card">
+            <h2>Recent Automated Executions</h2>
+            <table class="execution-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Token</th>
+                        <th>Action</th>
+                        <th>Amount</th>
+                        <th>Transaction Hash</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="executions-table">
+                    <tr>
+                        <td colspan="6" style="text-align: center;">Loading executions...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <button class="refresh-button" onclick="location.reload()">Refresh Status</button>
+        
+        <div class="last-update">
+            Last updated: <span id="last-update">Now</span>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-refresh every 30 seconds
+        setTimeout(() => location.reload(), 30000);
+        
+        // Update last update time
+        function updateLastUpdate() {
+            const now = new Date();
+            document.getElementById('last-update').textContent = now.toLocaleTimeString();
+        }
+        
+        // Fetch role status
+        async function fetchRoleStatus() {
+            try {
+                const response = await fetch('/api/role-status');
+                const data = await response.json();
+                
+                // Update safe info
+                if (data.role) {
+                    document.getElementById('safe-address').textContent = data.role.address;
+                    document.getElementById('chain-name').textContent = data.role.network;
+                    document.getElementById('safe-balance').textContent = data.role.balance || 'Loading...';
+                }
+                
+                // Update permissions
+                if (data.permissions) {
+                    document.getElementById('permission-count').textContent = data.permissions.length;
+                    updateTokenList(data.permissions);
+                }
+                
+                // Update executions
+                if (data.recentExecutions) {
+                    document.getElementById('execution-count').textContent = data.recentExecutions.length;
+                    updateExecutionsTable(data.recentExecutions);
+                }
+                
+                // Update health status
+                if (data.health) {
+                    updateHealthStatus(data.health);
+                }
+                
+                updateLastUpdate();
+            } catch (error) {
+                console.error('Failed to fetch status:', error);
+                document.getElementById('safe-address').textContent = 'Error';
+                document.getElementById('chain-name').textContent = 'Failed';
+            }
+        }
+        
+        function updateTokenList(permissions) {
+            const container = document.getElementById('token-list');
+            if (permissions.length === 0) {
+                container.innerHTML = '<em>No verified permissions</em>';
+                return;
+            }
+            
+            const tokenItems = permissions.slice(0, 5).map(token => 
+                `<div>• ${token.symbol} (${token.address.substring(0, 6)}...) - Max: ${token.maxTradeAmount}</div>`
+            ).join('');
+            
+            container.innerHTML = tokenItems;
+            if (permissions.length > 5) {
+                container.innerHTML += `<div>... and ${permissions.length - 5} more</div>`;
+            }
+        }
+        
+        function updateExecutionsTable(executions) {
+            const tbody = document.getElementById('executions-table');
+            
+            if (executions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No recent executions</td></tr>';
+                return;
+            }
+            
+            const rows = executions.map(exec => {
+                const timestamp = new Date(exec.timestamp).toLocaleTimeString();
+                const statusClass = exec.status === 'EXECUTED' ? 'status-active' : 
+                                   exec.status === 'FAILED' ? 'status-danger' : 'status-warning';
+                const statusIndicator = exec.status === 'EXECUTED' ? '✅' : 
+                                       exec.status === 'FAILED' ? '❌' : '⏳';
+                
+                return `
+                    <tr>
+                        <td>${timestamp}</td>
+                        <td>${exec.tokenSymbol || 'unknown'}</td>
+                        <td>${exec.action || 'unknown'}</td>
+                        <td>${exec.amount || '0'}</td>
+                        <td><code>${exec.txHash?.substring(0, 10) || 'pending'}...</code></td>
+                        <td class="${statusClass}">${statusIndicator} ${exec.status}</td>
+                    </tr>
+                `;
+            }).join('');
+            
+            tbody.innerHTML = rows;
+        }
+        
+        function updateHealthStatus(health) {
+            // Update registry status
+            const registryStatus = document.getElementById('registry-status');
+            registryStatus.textContent = health.registryComplete ? 'Complete' : 'Incomplete';
+            registryStatus.className = health.registryComplete ? 'status-active' : 'status-danger';
+            
+            // Update overall status
+            const overallStatus = document.getElementById('overall-status');
+            const healthIndicator = document.getElementById('health-indicator');
+            
+            if (health.isOperational) {
+                overallStatus.textContent = 'OPERATIONAL';
+                healthIndicator.className = 'status-indicator active';
+            } else {
+                overallStatus.textContent = 'DEGRADED';
+                healthIndicator.className = 'status-indicator warning';
+                
+                if (health.hasRecentFailures) {
+                    overallStatus.textContent = 'CRITICAL';
+                    healthIndicator.className = 'status-indicator danger';
+                }
+            }
+        }
+        
+        // Fetch status on page load
+        document.addEventListener('DOMContentLoaded', fetchRoleStatus);
+    </script>
+</body>
+</html>

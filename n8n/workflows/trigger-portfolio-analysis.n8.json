@@ -1,0 +1,51 @@
+{
+  "name": "Trigger Portfolio Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": [
+          {
+            "mode": "everyX",
+            "value": 6,
+            "unit": "hours"
+          }
+        ]
+      },
+      "name": "Start",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{ json: { message: `Portfolio analysis triggered at ${new Date().toISOString()}`, timestamp: Date.now() } }];"
+      },
+      "name": "Log Trigger",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Log Trigger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "id": "1"
+}

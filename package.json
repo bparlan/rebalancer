@@ -1,0 +1,46 @@
+{
+  "name": "rebalancer",
+  "version": "1.0.0",
+  "description": "Autonomous portfolio-rebalancing bot for Base chain using Zodiac Roles",
+  "main": "rebalancer/src/role-executor.js",
+  "type": "module",
+  "scripts": {
+    "start": "node rebalancer/src/role-executor.js",
+    "status-api": "node rebalancer/src/status-api.js",
+    "validate": "node rebalancer/scripts/validate-registry.js",
+    "test": "node rebalancer/scripts/test-portfolio.js",
+    "monitor": "watchmedir rebalancer -e modified,created --node-restart-delay 2000 --node-command \"node rebalancer/src/role-executor.js\"",
+    "logs": "tail -f rebalancer/logs/runs.sqlite",
+    "help": "node rebalancer/scripts/help.js"
+  },
+  "keywords": [
+    "rebalancer",
+    "zodiac",
+    "roles",
+    "automation",
+    "portfolio",
+    "base",
+    "blockchain"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "ethers": "latest",
+    "express": "latest",
+    "sqlite3": "latest"
+  },
+  "devDependencies": {
+    "nodemon": "latest"
+  },
+  "engines": {
+    "node": "22.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/rebalancer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/rebalancer/issues"
+  },
+  "homepage": "https://github.com/yourusername/rebalancer#readme"
+}
