@@ -13,6 +13,8 @@ class StatusAPI {
     this.registryPath = path.join(__dirname, '../n8n/rebalancer-roles-registry.json');
     this.registry = this.loadRegistry();
     this.logsPath = path.join(__dirname, '../logs/runs.sqlite');
+    this.portfolioAnalyzer = new PortfolioAnalyzer(config);
+
     
     this.setupMiddleware();
     this.setupRoutes();

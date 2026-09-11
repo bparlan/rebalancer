@@ -180,12 +180,15 @@ class AutomatedRoleExecutor {
     // Add tactical ranges from portfolio analyzer for UI display
     const permissionsWithRanges = basePermissions.map(permission => {
       const tacticalRange = this.portfolioAnalyzer.tacticalRanges[permission.symbol];
+      const strategicTarget = this.portfolioAnalyzer.strategicTargets[permission.symbol];
+      
       return {
         ...permission,
         tacticalRange: tacticalRange ? {
           min: tacticalRange.min,
           max: tacticalRange.max,
-          strategic_target: this.portfolioAnalyzer.strategicTargets[permission.symbol]?.target || 0
+          strategic_target: strategicTarget?.target || 0,
+          strategic_weight: strategicTarget?.weight || 'unknown'
         } : null
       };
     });
