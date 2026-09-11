@@ -3,6 +3,7 @@ const express = require('express');
 const { ethers } = require('ethers');
 const fs = require('fs');
 const path = require('path');
+const PortfolioAnalyzer = require('./portfolio-analyzer.js');
 
 class StatusAPI {
   constructor(config) {
