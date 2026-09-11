@@ -15,11 +15,10 @@ class StatusAPI {
     this.logsPath = path.join(__dirname, '../logs/runs.sqlite');
     this.portfolioAnalyzer = new PortfolioAnalyzer(config);
 
-    
     this.setupMiddleware();
     this.setupRoutes();
   }
-  
+
   loadRegistry() {
     try {
       const data = fs.readFileSync(this.registryPath, 'utf8');
@@ -29,12 +28,12 @@ class StatusAPI {
       return null;
     }
   }
-  
+
   setupMiddleware() {
     this.app.use(express.json());
     this.app.use(express.static(path.join(__dirname, '../../dashboard')));
   }
-  
+
   setupRoutes() {
     // Main status endpoint
     this.app.get('/api/role-status', async (req, res) => {
@@ -43,7 +42,7 @@ class StatusAPI {
         const permissions = await this.getActivePermissions();
         const recentExecutions = await this.getRecentExecutions();
         const health = await this.getSystemHealth();
-        
+
         res.json({
           timestamp: Date.now(),
           role: roleStatus,
@@ -55,7 +54,7 @@ class StatusAPI {
         res.status(500).json({ error: error.message });
       }
     });
-    
+
     // Health check endpoint
     this.app.get('/api/health', async (req, res) => {
       try {
@@ -69,7 +68,7 @@ class StatusAPI {
         res.status(500).json({ error: error.message });
       }
     });
-    
+
     // Manual execution trigger (for testing)
     this.app.post('/api/execute-trade', async (req, res) => {
       try {
@@ -80,7 +79,7 @@ class StatusAPI {
         res.status(400).json({ error: error.message });
       }
     });
-    
+
     // Get execution history
     this.app.get('/api/executions', async (req, res) => {
       try {
@@ -92,7 +91,7 @@ class StatusAPI {
       }
     });
   }
-  
+
   async getRoleStatus() {
     // Simulate role Safe status - in real implementation, this would query the actual role Safe
     return {
@@ -104,25 +103,40 @@ class StatusAPI {
       lastChecked: Date.now()
     };
   }
-  
+
   async getActivePermissions() {
     if (!this.registry) return [];
-    
+
     return this.registry.tokens
       .filter(token => token.verified)
-      .map(token => ({
-        symbol: token.symbol,
-        address: token.address,
-        decimals: token.decimals,
-        maxTradeAmount: token.maxTradeAmount || 'unlimited',
-        verified: token.verified
-      }));
+      .map(token => {
+        const tacticalRange = this.portfolioAnalyzer?.tacticalRanges?.[token.symbol];
+        const strategicTarget = this.portfolioAnalyzer?.strategicTargets?.[token.symbol];
+        const permission = {
+          symbol: token.symbol,
+          address: token.address,
+          decimals: token.decimals,
+          maxTradeAmount: token.maxTradeAmount || 'unlimited',
+          verified: token.verified
+        };
+        
+        if (tacticalRange) {
+          permission.tacticalRange = {
+            min: tacticalRange.min,
+            max: tacticalRange.max,
+            strategic_target: strategicTarget?.target || 0,
+            strategic_weight: strategicTarget?.weight || 'unknown'
+          };
+        }
+        
+        return permission;
+      });
   }
-  
+
   async getRecentExecutions(limit = 10) {
     const sqlite3 = require('sqlite3').verbose();
     const db = new sqlite3.Database(this.logsPath);
-    
+
     return new Promise((resolve, reject) => {
       const executions = [];
       db.each(
@@ -160,31 +174,31 @@ class StatusAPI {
       db.close();
     });
   }
-  
+
   async getSystemHealth() {
     const roleStatus = await this.getRoleStatus();
     const permissions = await this.getActivePermissions();
     const recentExecutions = await this.getRecentExecutions(5);
-    
+
     const hasRecentFailures = recentExecutions.some(e => e.status === 'FAILED');
-    const registryComplete = this.registry && 
-      this.registry.role.verified && 
+    const registryComplete = this.registry &&
+      this.registry.role.verified &&
       this.registry.tokens.every(t => t.verified) &&
       this.registry.executionVenue.type !== '#NEEDS-CLARIFICATION';
-    
+
     return {
       role: roleStatus,
       activePermissions: permissions.length,
       recentExecutions: recentExecutions.length,
       hasRecentFailures,
       registryComplete,
-      isOperational: roleStatus.isOperational && 
-                   permissions.length > 0 && 
+      isOperational: roleStatus.isOperational &&
+                   permissions.length > 0 &&
                    registryComplete &&
                    !hasRecentFailures
     };
   }
-  
+
   async executeTrade(tokenSymbol, action, amount) {
     // This would integrate with the actual role executor
     // For now, returns a mock response
@@ -195,7 +209,7 @@ class StatusAPI {
       gasCostUsd: '5.25'
     };
   }
-  
+
   start() {
     this.app.listen(this.port, () => {
       console.log(`Status API running on port ${this.port}`);
